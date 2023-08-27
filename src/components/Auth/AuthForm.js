@@ -1,10 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
 
 import classes from "./AuthForm.module.css";
+import AuthContext from "../../store/auth-context";
 
 const AuthForm = () => {
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
+
+  const authCtx = useContext(AuthContext);
+
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,45 +25,46 @@ const AuthForm = () => {
     setIsLoading(true);
     let url;
     if (isLogin) {
-      url= 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBHIT4vrvkOkxBfGE-7je5urZRzeBVN-7k';
+      url =
+        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBHIT4vrvkOkxBfGE-7je5urZRzeBVN-7k";
     } else {
-      url= 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBHIT4vrvkOkxBfGE-7je5urZRzeBVN-7k';
-      fetch(
-        url,{
-          method: "POST",
-          body: JSON.stringify({
-            email: enteredEmail,
-            password: enteredPassword,
-            returnSecureToken: true,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      ).then((res) => { 
-        setIsLoading(false);
-        if (res.ok) {
-          //....Success
-          return res.json();
-        } else {
-          return res.json().then((data) => {
-            //show an error modal
-           let errorMessage = 'Authentication Failed !';
-           //if(data && data.error && data.error.message){
-             //errorMessage= data.error.message;
-           //}
-           alert(errorMessage);
-           throw new Error(errorMessage);
-          });
-        }
-          }).then(data => {
-            console.log(data);
-          }).catch(err=>{
-             alert(err.message);
-          });
-        };
-     
-      }
+      url =
+        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBHIT4vrvkOkxBfGE-7je5urZRzeBVN-7k";
+    }
+      fetch(url, {
+        method: "POST",
+        body: JSON.stringify({
+          email: enteredEmail,
+          password: enteredPassword,
+          returnSecureToken: true,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => {
+          setIsLoading(false);
+          if (res.ok) {
+            return res.json();
+          } else {
+            return res.json().then((data) => {
+              //show an error modal
+              let errorMessage = "Authentication Failed !";
+              //if(data && data.error && data.error.message){
+              //errorMessage= data.error.message;
+              //}
+              throw new Error(errorMessage);
+            });
+          }
+        })
+        .then((data) => {
+          authCtx.login(data.idToken); //token we get from firebase
+        })
+        .catch((err) => {
+          alert(err.message);
+        });
+    
+  };
 
   return (
     <section className={classes.auth}>
@@ -79,7 +84,9 @@ const AuthForm = () => {
           />
         </div>
         <div className={classes.actions}>
-          {!isLoading&&<button>{isLogin ? 'Login' :'Create Account'}</button>}
+          {!isLoading && (
+            <button>{isLogin ? "Login" : "Create Account"}</button>
+          )}
           {isLoading && <p>Loading...</p>}
           <button
             type="button"
