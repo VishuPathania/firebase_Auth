@@ -1,9 +1,10 @@
 import { useState, useRef, useContext } from "react";
-
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import classes from "./AuthForm.module.css";
 import AuthContext from "../../store/auth-context";
 
 const AuthForm = () => {
+  const history = useHistory();
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
 
@@ -59,6 +60,7 @@ const AuthForm = () => {
         })
         .then((data) => {
           authCtx.login(data.idToken); //token we get from firebase
+          history.replace('/'); //user cant go backscreen
         })
         .catch((err) => {
           alert(err.message);
