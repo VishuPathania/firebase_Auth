@@ -12,6 +12,7 @@ const AuthForm = () => {
 
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [tokenTimeout ,setTokenTimeout] = useState(null);
 
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
@@ -59,9 +60,23 @@ const AuthForm = () => {
           }
         })
         .then((data) => {
-          authCtx.login(data.idToken); //token we get from firebase
-          history.replace('/'); //user cant go backscreen
+          authCtx.login(data.idToken); // Token we get from firebase
+        
+          const expirationTime = new Date().getTime() + (5 * 60 * 1000); // Calculate expiration time
+        
+          // Set a timeout to clear token after 5 minutes
+          const timeoutId = setTimeout(() => {
+            const currentTime = new Date().getTime();
+            if (currentTime > expirationTime) {
+              authCtx.logout(); // Clear token when it expires
+            }
+          }, 5 * 60 * 1000); // 5 minutes in milliseconds
+        
+          setTokenTimeout(timeoutId); // Store the timeout identifier
+        
+          history.replace('/');
         })
+        
         .catch((err) => {
           alert(err.message);
         });
